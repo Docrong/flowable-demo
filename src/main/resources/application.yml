@@ -1,0 +1,30 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    username: root
+    password: guirong
+    url: jdbc:mysql://192.168.182.128:3306/flowable-demo?characterEncoding=UTF-8&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+flowable:
+  async-executor-activate: false
+  database-schema-update: true
+  app:
+    deploy-resources: false
+
+logging:
+  level:
+    com.demo.flowable: debug
+    org.flowable.engine: debug
+    org.flowable.ui.modeler.repository: debug
+    root: info
+
+mybatis:
+  
+mybatis-plus:
+  typeAliasesPackage: com.demo.**.entity
+    # 配置mapper的扫描，找到所有的mapper.xml映射文件
+  mapperLocations: classpath:com/demo/flowable/**/mapper/xml/*Mapper.xml
+  
