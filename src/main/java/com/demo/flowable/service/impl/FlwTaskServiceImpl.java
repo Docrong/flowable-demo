@@ -44,7 +44,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
     private TaskService taskService;
 
     @Resource
-    private RepositoryService repositoryService; 
+    private RepositoryService repositoryService;
 
     @Resource
     private RuntimeService runtimeService;
@@ -54,6 +54,10 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
 
     @Resource
     private IFlwInstanceService processInstanceService;
+
+    public static final String HIS_ACTIVITY_KEY = "HIS_ACTIVITY_KEY";
+
+    public static final String TASK_ID_ = "DONE_TASK_ID_";
 
     @Override
     public List<TaskEntityImpl> getTasksByProcessInstanceIds(List<String> processInstanceIds) {
@@ -135,8 +139,8 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
     @Transactional(rollbackFor = Exception.class)
     public boolean returnTask(FlwTaskReturnReqVO reqVO) {
         // 1.1 当前任务 task
-        Task task = checkTask(reqVO.getId(), reqVO.getId());
-        
+        Task task = checkTask(reqVO.getOperatorId(), reqVO.getId());
+
         // 1.2 校验源头和目标节点的关系，并返回目标元素
         FlowElement targetElement = validateTargetTaskCanReturn(task.getTaskDefinitionKey(), reqVO.getTargetDefinitionKey(), task.getProcessDefinitionId());
 
@@ -160,14 +164,20 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
                     BpmCommentTypeEnum.BACK.getType().toString(), reqVO.getReason());
         });
 
+        //根据历史记录查询 targetElement 最近的处理人
+        List<HistoricTaskInstance> list = historyService.createHistoricTaskInstanceQuery().processInstanceId(task.getProcessInstanceId()).orderByHistoricTaskInstanceStartTime().desc().list();
+        Optional<HistoricTaskInstance> targetHistoryTask = list.stream().filter(t -> t.getTaskDefinitionKey().equals(reqVO.getTargetDefinitionKey())).findFirst();
+        String assignee = targetHistoryTask.map(TaskInfo::getAssignee).orElse(null);
+        Assert.notBlank(assignee, "找不到参与对象");
+
         // 3. 执行驳回
         runtimeService.createChangeActivityStateBuilder()
                 .processInstanceId(task.getProcessInstanceId())
                 .moveActivityIdsToSingleActivityId(returnTaskKeyList, // 当前要跳转的节点列表( 1 或多)
                         reqVO.getTargetDefinitionKey()) // targetKey 跳转到的节点(1)
+                .processVariable(assigneeId, assignee)
                 .changeState();
-        
-        return false;
+        return true;
     }
 
     @Override
@@ -176,10 +186,10 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         // 校验任务存在
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
         Assert.notNull(task, String.format("任务%s不存在", taskId));
-        
+
         BpmnModel bpmnModel = repositoryService.getBpmnModel(task.getProcessDefinitionId());
         FlowElement source = bpmnModel.getMainProcess().getFlowElement(task.getTaskDefinitionKey());
-        
+
         Assert.notNull(source, "model找不到flow元素");
 
         // 2.1 查询该任务的前置任务节点的 key 集合
@@ -189,6 +199,9 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         }
         // 2.2 过滤：只有串行可到达的节点，才可以回退。类似非串行、子流程无法退回
         previousUserList.removeIf(userTask -> !BpmnModelUtils.isSequentialReachable(source, userTask, null));
+
+        List<HistoricTaskInstance> list = historyService.createHistoricTaskInstanceQuery().processInstanceId(task.getProcessInstanceId()).list();
+        System.out.println(list.size());
         return FlwTaskConvert.INSTANCE.convertList(previousUserList);
     }
 
@@ -220,13 +233,27 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean createSignTask(FlwTaskAddSignReqVO reqVO) {
-        return null;
+        // 校验任务存在
+        Task task = checkTask(reqVO.getOperatorId(), reqVO.getId());
+        //before 向前加签
+        //after 向后加签
+        if ("before".equals(reqVO.getType())) {
+
+        } else if ("after".equals(reqVO.getType())) {
+            String parentTaskId = task.getParentTaskId();
+        }
+        return false;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String handover(FlwTaskHandoverReqVO reqVO) {
-        return null;
+    public Boolean handover(FlwTaskHandoverReqVO reqVO) {
+        // 校验任务存在
+        checkTask(reqVO.getOperatorId(), reqVO.getId());
+        // TODO 这里需要生成一条 ACT_HI_TASKINST 记录
+
+        taskService.setAssignee(reqVO.getId(), reqVO.getAssigneeId());
+        return true;
     }
 
     @Override
@@ -263,10 +290,6 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         Assert.equals(userId, task.getAssignee(), "审批任务失败，原因：该任务的审批人不一致");
         return task;
     }
-
-    public static final String HIS_ACTIVITY_KEY = "HIS_ACTIVITY_KEY";
-
-    public static final String TASK_ID_ = "DONE_TASK_ID_";
 
     private List<String> getHisKeys(Task task) {
         Object obj = taskService.getVariable(task.getId(), HIS_ACTIVITY_KEY);

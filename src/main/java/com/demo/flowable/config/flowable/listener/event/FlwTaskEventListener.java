@@ -36,6 +36,7 @@ public class FlwTaskEventListener extends AbstractFlowableEngineEventListener {
 
     @Override
     protected void taskCreated(FlowableEngineEntityEvent event) {
+        log.info("生成任务");
         TaskEntity entity = (TaskEntity) event.getEntity();
         //修改模型时已经修改了xml 分类 不需要修改
 //        if (StrUtil.isBlank(entity.getCategory())) {
@@ -50,15 +51,17 @@ public class FlwTaskEventListener extends AbstractFlowableEngineEventListener {
 
     @Override
     protected void taskCompleted(FlowableEngineEntityEvent event) {
+        log.info("任务结束");
     }
 
     @Override
     protected void taskAssigned(FlowableEngineEntityEvent event) {
+        log.info("生成受让人");
     }
 
     @Override
     protected void activityCancelled(FlowableActivityCancelledEvent event) {
-
+        log.info("实例取消");
     }
 
 }

@@ -55,11 +55,11 @@ public interface IFlwTaskService {
 
     /**
      * 移交
-     * 
+     *
      * @param reqVO 移交对象
      * @return
      */
-    String handover(FlwTaskHandoverReqVO reqVO);
+    Boolean handover(FlwTaskHandoverReqVO reqVO);
 
     /**
      * 获得指令流程实例的流程任务列表，包括所有状态的

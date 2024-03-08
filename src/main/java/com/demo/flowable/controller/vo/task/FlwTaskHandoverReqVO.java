@@ -20,6 +20,10 @@ public class FlwTaskHandoverReqVO {
     private String id;
 
     @ApiModelProperty(value = "新审批人的用户编号", required = true, example = "2048")
-    @NotNull(message = "新审批人的用户编号不能为空")
+    @NotNull(message = "受让人的用户编号不能为空")
     private String assigneeId;
+    
+    @ApiModelProperty(name = "操作人", notes = "")
+    @NotNull(message = "操作人的用户编号不能为空")
+    private String operatorId;
 }

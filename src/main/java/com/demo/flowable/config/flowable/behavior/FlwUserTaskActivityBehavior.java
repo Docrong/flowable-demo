@@ -47,6 +47,7 @@ public class FlwUserTaskActivityBehavior extends UserTaskActivityBehavior {
             TaskHelper.changeTaskAssignee(task, String.valueOf(assigneeUserId));
         }
     }
+    
 
     private String calculateTaskCandidateUsers(DelegateExecution execution) {
         // 情况一，如果是多实例的任务，例如说会签、或签等情况，则从 Variable 中获取。它的任务处理人在 BpmParallelMultiInstanceBehavior 中已经被分配了

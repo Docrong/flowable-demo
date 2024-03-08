@@ -6,9 +6,11 @@ import com.google.common.collect.Lists;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.flowable.task.service.impl.persistence.entity.TaskEntityImpl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -56,7 +58,7 @@ public class FlwTaskController {
 
     @ApiOperation("移交任务")
     @PostMapping("/handover")
-    public String handover(@RequestBody FlwTaskHandoverReqVO reqVO) {
+    public Boolean handover(@RequestBody FlwTaskHandoverReqVO reqVO) {
         return taskService.handover(reqVO);
     }
 
@@ -76,5 +78,12 @@ public class FlwTaskController {
     @PostMapping("/createSign")
     public Boolean createSign(@RequestBody FlwTaskAddSignReqVO reqVO) {
         return taskService.createSignTask(reqVO);
+    }
+
+    
+    @ApiOperation("diagram")
+    @PostMapping("/diagram")
+    public ResponseEntity<byte[]> diagram(String str, HttpServletResponse response){
+        return null;
     }
 }

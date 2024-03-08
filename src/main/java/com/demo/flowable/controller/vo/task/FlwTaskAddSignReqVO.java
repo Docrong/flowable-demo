@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -31,4 +32,9 @@ public class FlwTaskAddSignReqVO {
     @NotEmpty(message = "加签原因不能为空")
     private String reason;
 
+    @ApiModelProperty(value = "变量实例")
+    private Map<String, Object> variables;
+
+    @ApiModelProperty(name = "", notes = "")
+    private String operatorId;
 }

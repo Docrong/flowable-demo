@@ -13,18 +13,30 @@ flowable:
   database-schema-update: true
   app:
     deploy-resources: false
+  rest:
+    app:
+      admin:
+        user-id: admin
+        password: test
+        first-name: Rest
+        last-name: Admin
+  rest-api-enabled: true
 
 logging:
   level:
+    root: info    
     com.demo.flowable: debug
     org.flowable.engine: debug
     org.flowable.ui.modeler.repository: debug
-    root: info
 
-mybatis:
   
 mybatis-plus:
   typeAliasesPackage: com.demo.**.entity
     # 配置mapper的扫描，找到所有的mapper.xml映射文件
   mapperLocations: classpath:com/demo/flowable/**/mapper/xml/*Mapper.xml
-  
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
